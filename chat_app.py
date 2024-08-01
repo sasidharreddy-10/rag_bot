@@ -134,21 +134,7 @@ with st.sidebar:
 
 
 # Main content area
-st.markdown("# Chatbot Interface")
 st.markdown("### What can I help you with today?")
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.button("💡 Activities to make friends in new city")
-
-with col2:
-    st.button("✏️ Text inviting friend to wedding")
-
-with col3:
-    st.button("✈️ Experience Seoul like a local")
-
-with col4:
-    st.button("🖥️ Make me a personal webpage")
 
 
 # Initialize chat history
@@ -174,9 +160,11 @@ if prompt := st.chat_input("What is up?"):
         if api_key:
             answer=rag_obj.qna(prompt)
             with st.chat_message("BOT"):
-                st.markdown(answer)
+                st.write_stream(answer)
             # Add user message to chat history
-            st.session_state.messages.append({"role": "Bot", "content": answer})
+            final_answer=rag_obj.answer
+            st.session_state.messages.append({"role": "Bot", "content": final_answer})
+            rag_obj.answer=''
         else:
             st.error("Please enter your API Key and other details at the top.")
     except Exception as e:
