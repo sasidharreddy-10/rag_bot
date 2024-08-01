@@ -6,7 +6,7 @@ from typing import Any
 from openai import OpenAI
 from openai import AzureOpenAI
 from pinecone import Pinecone, ServerlessSpec
-from langchain_openai import AzureOpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, AzureOpenAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -45,6 +45,7 @@ class RAG:
     def __init__(self, index_name, text_processor : TextProcessor, PINECONE_API_KEY, gpt_engine_name, embedding_model_name, api_key, azure_endpoint, api_version, openai_type) -> None:
         self.index_name = index_name
         self.docsearch=None
+        self.answer=''
         self.gpt_engine_name=gpt_engine_name
         self.doc_processing=text_processor
         self.pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -61,7 +62,7 @@ class RAG:
                 openai_api_version=api_version)
         else:
             self.openai_client = OpenAI(api_key=api_key)
-            self.embeddings = OpenAI(api_key=api_key)
+            self.embeddings = OpenAIEmbeddings(model=embedding_model_name, api_key=api_key)
         self.__call__()
         
     def __call__(self) -> None:
@@ -104,10 +105,11 @@ context:
 
 Based on the above context, answer the user query.
 '''},  
-                                                        {'role': 'user',  'content':query}]
+                                                        {'role': 'user',  'content':query}],
+                                                        stream=True
                                                 )
         
-        return res.choices[0].message.content
+        return res
     
     def qna(self, query):
         docs = self.docsearch.similarity_search(query)
@@ -117,4 +119,11 @@ Based on the above context, answer the user query.
             text=i.page_content
             context+=f'document_name: {doc_name} \n\n' + f'text: {text} \n\n'
         answer=self._qna_helper(query, context)
-        return answer
+        final_answer=''
+        for chunk in answer:
+            if len(chunk.choices)>0 and chunk.choices[0].delta.content is not None:
+                text = chunk.choices[0].delta.content
+                final_answer+=text
+                yield text
+                time.sleep(0.02)
+        self.answer=final_answer
