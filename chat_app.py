@@ -12,6 +12,14 @@ os.environ['PINECONE_API_KEY'] = '193bfd5b-1a4a-4c8b-bc06-7ec7c4cfc66a'
 
 PINECONE_API_KEY="193bfd5b-1a4a-4c8b-bc06-7ec7c4cfc66a"
 
+# List of recommended questions
+recommended_questions = [
+    "Tell about baroda home loans",
+    "benifits of Baroda Home Loan",
+    "what is statement of confidentiality?"
+]
+
+
 # Set the page title and layout
 st.set_page_config(page_title="Chatbot Interface", layout="wide")
 
@@ -147,9 +155,20 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# Initialize session state for the selected question
+if 'selected_question' not in st.session_state:
+    st.session_state.selected_question = "What is up?"
 
-# Accept user input
-if prompt := st.chat_input("What is up?"):
+def handle_button_click(question):
+    st.session_state.selected_question = question
+
+# Function to handle button click
+def handle_button_click(question):
+    st.session_state.selected_question = question
+    # Trigger bot query
+    process_input(question)
+
+def process_input(prompt):
     # Display user message in chat message container
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -170,6 +189,19 @@ if prompt := st.chat_input("What is up?"):
     except Exception as e:
         answer="Something went wrong, please check your openai credentials"
         st.error(answer)
+
+# Display recommended questions as buttons
+if not st.session_state.messages:
+    st.write("**Recommended Questions:**")
+    cols = st.columns(len(recommended_questions))
+    for i, question in enumerate(recommended_questions):
+        if cols[i].button(question):
+            handle_button_click(question)
+
+# Prefill input bar with the selected question if available
+if prompt := st.chat_input(st.session_state.selected_question):
+    process_input(prompt)
+
 
 # Dummy element to trigger auto-scrolling
 auto_scroll = st.empty()
