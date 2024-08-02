@@ -52,6 +52,7 @@ def display_modal():
                 st.session_state.api_key = st.text_input("API Key", type="password")
                 st.session_state.model_name = st.text_input("Model Name")
                 st.session_state.embedding_model_name = st.text_input("Embedding Model Name")
+                st.warning("Use text-embedding-002 model as VectorDB is optimized for it.")
             elif service == "Azure OpenAI":
                 st.session_state.openai_type = "azure_openai"
                 st.session_state.api_key = st.text_input("API Key", type="password")
@@ -59,6 +60,7 @@ def display_modal():
                 st.session_state.version = st.text_input("Version")
                 st.session_state.model_name = st.text_input("Model Name")
                 st.session_state.embedding_model_name = st.text_input("Embedding Model Name")
+                st.warning("Use text-embedding-002 model as VectorDB is optimized for it.")
 
             if st.form_submit_button("Submit"):
                 # Collect and display the input values
