@@ -15,10 +15,19 @@ PINECONE_API_KEY="193bfd5b-1a4a-4c8b-bc06-7ec7c4cfc66a"
 # List of recommended questions
 recommended_questions = [
     "Tell about baroda home loans",
-    "benifits of Baroda Home Loan",
-    "what is statement of confidentiality?"
+    "Benifits of Baroda Home Loan",
+    "statement of confidentiality?"
 ]
 
+answers=['''Bank of Baroda offers Baroda Home Loan, which is designed for aspiring homeowners who dream of buying their own residence. This housing loan can be used for various purposes such as buying a plot, purchasing a flat, building your own home, or extending your existing residence. Baroda Home Loan offers several exclusive features and benefits, including low interest rates, low processing charges, higher loan amounts, free credit card, and longer tenures. The loan amount is approved based on the location and income of the applicants. Furthermore, there are no hidden charges, no pre-payment penalty, and the interest rate is linked to Baroda Repo Linked Lending Rate (BRLLR) of the bank, which is reset monthly. To find out more about the Baroda Home Loan interest rate and other details, you can use the Bob Home Loan Calculator.''',
+         '''The benefits of Baroda Home Loan include:
+
+1. Low interest rates.\n
+2. Low processing charges.\n
+3. Higher loan amount.\n
+4. Free credit card.\n
+5. Longer tenures.''',
+'''The Statement of Confidentiality is a contractual agreement between DEWA, its employees, and project stakeholders. It reinforces DEWA's commitment to protecting sensitive information and ensures that the Business Requirements Document (BRD) and associated project materials remain secure. The statement outlines stringent confidentiality measures that must be adhered to in order to build trust with stakeholders and emphasize DEWA's commitment to data security and privacy.''']
 
 # Set the page title and layout
 st.set_page_config(page_title="Chatbot Interface", layout="wide")
@@ -146,6 +155,9 @@ with st.sidebar:
 # Main content area
 st.markdown("### What can I help you with today?")
 
+# Display the message
+st.write("You can upload documents in the sidebar")
+
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -166,9 +178,26 @@ def handle_button_click(question):
 
 # Function to handle button click
 def handle_button_click(question):
+    with st.chat_message("user"):
+        st.markdown(question)
     st.session_state.selected_question = question
+    st.session_state.messages.append({"role": "user", "content": question})
     # Trigger bot query
-    process_input(question)
+    for i, j in enumerate(recommended_questions):
+            if j==question:
+                answer=answers[i]
+    cache_answer(answer)
+    st.warning("The answer is from the cache!")
+
+def cache_answer(answer):
+    answer_list=answer.split()
+    def stream_answer():
+        for i in answer_list:
+            yield i + " "
+            time.sleep(0.02)
+    st.write_stream(stream_answer)
+    st.session_state.messages.append({"role": "Bot", "content": answer})
+
 
 def process_input(prompt):
     # Display user message in chat message container
@@ -178,7 +207,7 @@ def process_input(prompt):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     try:
-        if api_key:
+        if st.session_state.api_key:
             answer=rag_obj.qna(prompt)
             with st.chat_message("BOT"):
                 st.write_stream(answer)
@@ -189,6 +218,7 @@ def process_input(prompt):
         else:
             st.error("Please enter your API Key and other details at the top.")
     except Exception as e:
+        print("error", e)
         answer="Something went wrong, please check your openai credentials"
         st.error(answer)
 
@@ -202,7 +232,8 @@ if not st.session_state.messages:
 
 # Prefill input bar with the selected question if available
 if prompt := st.chat_input(st.session_state.selected_question):
-    process_input(prompt)
+        
+        process_input(prompt)
 
 
 # Dummy element to trigger auto-scrolling
